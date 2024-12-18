@@ -9,7 +9,7 @@ import Preordernav from '@/components/Preordernav.vue';
       <h2 class="table-title">Preorder List</h2>
       <div class="table-actions flex-wrap gap-2">
         <Preordernav />
-        <div v-if="adminOnly" class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2 flex-wrap" v-if="adminOnly">
           <div>
             <select class="form-select" @change="fetchPreorders" v-model="orderBy" aria-label="Default select example">
               <option value="1">Latest</option>
@@ -36,6 +36,7 @@ import Preordernav from '@/components/Preordernav.vue';
               <th scope="col">Email</th>
               <th scope="col">Phone</th>
               <th scope="col">Product ID</th>
+              <th scope="col">Deleted By</th>
               <th v-if="adminOnly" scope="col">Action</th>
             </tr>
           </thead>
@@ -47,8 +48,9 @@ import Preordernav from '@/components/Preordernav.vue';
               <td>{{ preorder.email }}</td>
               <td>{{ preorder.phone || 'N/A' }}</td>
               <td>{{ preorder.product.name }}</td>
+              <td>{{ preorder.deleted_by?.name }}</td>
               <td v-if="adminOnly">
-                <button class="btn btn-danger btn-sm" @click="deletePreorder(preorder.id)">Delete</button>
+                <button class="btn btn-success btn-sm" @click="restorePreorder(preorder.id)">Restore</button>
               </td>
             </tr>
           </tbody>
@@ -61,6 +63,7 @@ import Preordernav from '@/components/Preordernav.vue';
       </div>
 
       <Logout />
+
     </div>
   </main>
 </template>
@@ -94,7 +97,7 @@ export default {
         orderBy: this.orderBy,
         per_page: 10,
       };
-      const response = await this.$axios.get("/preorders", { params });
+      const response = await this.$axios.get("/preorders/trashed", { params });
       this.preorders = response.data;
       console.log(this.preorders);
 
@@ -105,9 +108,9 @@ export default {
       }
       return null;
     },
-    async deletePreorder(id) {
-      if (confirm("Are you sure you want to delete this preorder?")) {
-        await this.$axios.post(`/preorders/${id}/delete`);
+    async restorePreorder(id) {
+      if (confirm("Are you sure you want to restore this preorder?")) {
+        await this.$axios.post(`/preorders/trashed/${id}/restore`);
         this.fetchPreorders(this.preorders.current_page);
       }
     },
